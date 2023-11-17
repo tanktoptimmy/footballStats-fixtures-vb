@@ -1,48 +1,3 @@
-// import Axios from 'axios';
-// import mongoose from 'mongoose';
-// import dbConnect from '@/utils/dbConnect.js'
-// import { query, variables } from '@/utils/query.js'
-// import { EventsModel } from "@/models/eventsSchema.js"
-
-// const start  = async (req, res) => {
-//   const { data } = await Axios.post('https://events.green-1-aws.live.skybet.com/graphql', {
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     query,
-//     variables
-//   })
-//   console.log(data)
-//   const {message, status} = await savePriceboosts(data.data)
-//   res.status(status).json(message);
-// }
-
-// const savePriceboosts = async (boosts) => {
-//   try {
-//     console.log("we are going to connect")
-//     await dbConnect();
-//     console.log("we have CONNECTED")
-//     const filter = { _id: 5 }; // Assuming _id is present in the fixtureData
-//     const update = { $set: {_id: 5, events: boosts.events} };
-//     const options = { upsert: true };
-//     await EventsModel.updateOne(filter, update, options);
-//     return {
-//       message: 'Priceboosts saved successfully',
-//       status: 200
-//     };
-//   } catch (error) {
-//     return {
-//       message: 'Priceboosts NOT saved successfully',
-//       status: 400
-//     };
-//     // throw new Error('Error saving Priceboosts:', error.message);
-//   } finally {
-//     mongoose.connection.close();
-//   }
-// };
-
-// export default start;
-
 import Axios from 'axios'
 import mongoose from 'mongoose'
 
@@ -63,18 +18,11 @@ const makeRequest = async (league) => {
       const response = await Axios(options);
       return response.data; // Assuming the response contains the data you need
     } catch (error) {
-      console.error(`Error fetching data for league ${league.league}:`, error);
-      return null;
+      throw new Error(`Error fetching data for league ${league.league}:`, error);
     }
 }
 
-const getFixtures = async () => {
-  const leagues = [
-    {
-      league: '39',
-      season: '2023'
-    }
-  ]
+const getFixtures = async (leagues) => {
 
   // Array to store all the promises for fetching data
   const fetchPromises = [];
@@ -88,31 +36,40 @@ const getFixtures = async () => {
   try {
   // Wait for all requests to complete
   return await Promise.all(fetchPromises)
-  // .then(results => {
-  //   // 'results' will be an array containing the data from all the requests
-  //   // Merge/Process the data as needed
-  //   const mergedData = results.reduce((merged, data) => {
-  //     // Assuming you want to merge the data into a single object
-  //     return { ...merged, ...data };
-  //   }, {});
-
-  //   console.log('Merged Data:', mergedData);
-  // })
   } catch(error) {
-    console.error('Error fetching league data:', error);
-    return null;
+    throw new Error('Error fetching league data:', error);
   };
 }
 
 export default async function main(req, res) {
-  // get all the fixtures
-  const fixtures = await getFixtures();
+  const { ids } = req.query;
+  
+  const leagues = {
+    39: {
+      // Premier League
+      league: '39',
+      season: '2023'
+    },
+    40: {
+      // Championship
+      league: '40',
+      season: '2023'
+    },
+    140: {
+      // La Liga
+      league: '140',
+      season: '2023'
+    }
+  }
 
-  // Extracting response arrays and merging them into a single array
+  const leaguesToGet = ids.map(id => leagues[id])
+  // get all the fixtures
+  const fixtures = await getFixtures(leaguesToGet);
+  // // Extracting response arrays and merging them into a single array
   const mergedFixtures = fixtures.reduce((accumulator, obj) => {
-  // Concatenate the response array of each object with the accumulator
-  return accumulator.concat(obj.response);
-}, []);
+    // Concatenate the response array of each object with the accumulator
+    return accumulator.concat(obj.response);
+  }, []);
 
   saveAllFixtures(mergedFixtures)
     .then(() => {
@@ -145,6 +102,8 @@ const saveFixture = async fixture => {
         away: fixture.teams.away.name
       }
     }
+
+    // console.log(newFixture)
 
     const filter = { _id: fixture.fixture.id } // Assuming _id is present in the fixtureData
     const update = { $set: newFixture }
