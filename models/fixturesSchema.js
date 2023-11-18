@@ -6,16 +6,16 @@ const fixtureSchema = new mongoose.Schema({
   date: Date,
   teams: {
     home: {
-      name: String,
+      name: String
     },
     away: {
-      name: String,
+      name: String
     }
   },
   round: String,
   league: {
     name: String,
-    id: Number,
+    id: Number
   }
 })
 

@@ -4,7 +4,7 @@ import mongoose from 'mongoose'
 import dbConnect from '@/utils/dbConnect.js'
 import { FixtureModel } from '@/models/fixturesSchema.js'
 
-const makeRequest = async (league) => {
+const makeRequest = async league => {
   const options = {
     method: 'GET',
     url: 'https://api-football-v1.p.rapidapi.com/v3/fixtures',
@@ -13,36 +13,35 @@ const makeRequest = async (league) => {
       'X-RapidAPI-Key': process.env.RAPIDAPIKEY,
       'X-RapidAPI-Host': process.env.RAPIDHOST
     }
-  };
-    try {
-      const response = await Axios(options);
-      return response.data; // Assuming the response contains the data you need
-    } catch (error) {
-      throw new Error(`Error fetching data for league ${league.league}:`, error);
-    }
+  }
+  try {
+    const response = await Axios(options)
+    return response.data // Assuming the response contains the data you need
+  } catch (error) {
+    throw new Error(`Error fetching data for league ${league.league}:`, error)
+  }
 }
 
-const getFixtures = async (leagues) => {
-
+const getFixtures = async leagues => {
   // Array to store all the promises for fetching data
-  const fetchPromises = [];
+  const fetchPromises = []
 
   // Iterate over each leagueId and create Axios requests
   leagues.forEach(league => {
-    const promise = makeRequest(league);
-    fetchPromises.push(promise);
-  });
+    const promise = makeRequest(league)
+    fetchPromises.push(promise)
+  })
 
   try {
-  // Wait for all requests to complete
-  return await Promise.all(fetchPromises)
-  } catch(error) {
-    throw new Error('Error fetching league data:', error);
-  };
+    // Wait for all requests to complete
+    return await Promise.all(fetchPromises)
+  } catch (error) {
+    throw new Error('Error fetching league data:', error)
+  }
 }
 
 export default async function main(req, res) {
-  const { ids } = req.query;
+  const { ids } = req.query
   const leagues = {
     39: {
       // Premier League
@@ -63,26 +62,26 @@ export default async function main(req, res) {
 
   const leaguesToGet = ids.map(id => leagues[id])
   // get all the fixtures
-  const fixtures = await getFixtures(leaguesToGet);
+  const fixtures = await getFixtures(leaguesToGet)
   // // Extracting response arrays and merging them into a single array
   const mergedFixtures = fixtures.reduce((accumulator, obj) => {
     // Concatenate the response array of each object with the accumulator
-    return accumulator.concat(obj.response);
-  }, []);
+    return accumulator.concat(obj.response)
+  }, [])
 
   await dbConnect()
   saveAllFixtures(mergedFixtures)
     .then(() => {
-      res.status(200).json({ message: "All saved nicely" });
+      res.status(200).json({ message: 'All saved nicely' })
     })
     .catch(error => {
       console.error('Error saving fixtures:', error.message)
-      res.status(400).json({ message: "Houston, we've had a problem" });
+      res.status(400).json({ message: "Houston, we've had a problem" })
     })
-    .finally(()=>{
-      mongoose.disconnect();
+    .finally(() => {
+      mongoose.disconnect()
       mongoose.connection.close()
-      console.info("mongoose connection closed")
+      console.info('mongoose connection closed')
     })
 }
 
@@ -94,8 +93,8 @@ const saveFixture = async fixture => {
       date: fixture.fixture.date,
       round: fixture.league.round,
       league: {
-        name:fixture.league.name,
-        id: fixture.league.id,
+        name: fixture.league.name,
+        id: fixture.league.id
       },
       teams: {
         home: fixture.teams.home.name,
@@ -112,15 +111,13 @@ const saveFixture = async fixture => {
 
     if (result.nModified > 0) {
       // Update successful, 'nModified' indicates the number of documents modified
-      console.log('Update successful');
+      console.log('Update successful')
     } else {
       // Update didn't make any changes, but the operation was successful
-      console.log('No changes made but update successful');
+      console.log('No changes made but update successful')
     }
-
-
   } catch (error) {
-    console.log("we had an error saving this fixture", error.message)
+    console.log('we had an error saving this fixture', error.message)
     // throw new Error('Error saving fixture:', error.message)
   }
 }
