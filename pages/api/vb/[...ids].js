@@ -120,7 +120,7 @@ const saveFixture = async fixture => {
 
 
   } catch (error) {
-    console.log("we had an error saving this fixture")
+    console.log("we had an error saving this fixture", error.message)
     throw new Error('Error saving fixture:', error.message)
   }
 }
