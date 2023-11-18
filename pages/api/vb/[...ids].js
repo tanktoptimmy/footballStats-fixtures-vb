@@ -70,24 +70,27 @@ export default async function main(req, res) {
     return accumulator.concat(obj.response);
   }, []);
 
+  await dbConnect()
   saveAllFixtures(mergedFixtures)
     .then(() => {
       // Close the MongoDB connection after saving all fixtures
-      mongoose.connection.close()
+      // mongoose.connection.close()
       res.status(200).json({ message: "All saved nicely" });
     })
     .catch(error => {
       console.error('Error saving fixtures:', error.message)
       // Close the MongoDB connection in case of an error
-      mongoose.connection.close()
+      // mongoose.connection.close()
       res.status(400).json({ message: "Houston, we've had a problem" });
+    })
+    .finally(()=>{
+      mongoose.connection.close()
     })
 }
 
 // Function to save a fixture to the database
 const saveFixture = async fixture => {
   try {
-    await dbConnect()
     const newFixture = {
       _id: fixture.fixture.id,
       date: fixture.fixture.date,
