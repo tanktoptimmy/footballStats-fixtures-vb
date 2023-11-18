@@ -73,18 +73,16 @@ export default async function main(req, res) {
   await dbConnect()
   saveAllFixtures(mergedFixtures)
     .then(() => {
-      // Close the MongoDB connection after saving all fixtures
-      // mongoose.connection.close()
       res.status(200).json({ message: "All saved nicely" });
     })
     .catch(error => {
       console.error('Error saving fixtures:', error.message)
-      // Close the MongoDB connection in case of an error
-      // mongoose.connection.close()
       res.status(400).json({ message: "Houston, we've had a problem" });
     })
     .finally(()=>{
+      mongoose.disconnect();
       mongoose.connection.close()
+      console.info("mongoose connection closed")
     })
 }
 
@@ -112,7 +110,6 @@ const saveFixture = async fixture => {
     const options = { upsert: true }
     const result = await FixtureModel.updateOne(filter, update, options)
 
-
     if (result.nModified > 0) {
       // Update successful, 'nModified' indicates the number of documents modified
       console.log('Update successful');
@@ -124,7 +121,7 @@ const saveFixture = async fixture => {
 
   } catch (error) {
     console.log("we had an error saving this fixture", error.message)
-    throw new Error('Error saving fixture:', error.message)
+    // throw new Error('Error saving fixture:', error.message)
   }
 }
 
