@@ -43,7 +43,6 @@ const getFixtures = async (leagues) => {
 
 export default async function main(req, res) {
   const { ids } = req.query;
-  
   const leagues = {
     39: {
       // Premier League
@@ -108,8 +107,20 @@ const saveFixture = async fixture => {
     const filter = { _id: fixture.fixture.id } // Assuming _id is present in the fixtureData
     const update = { $set: newFixture }
     const options = { upsert: true }
-    await FixtureModel.updateOne(filter, update, options)
+    const result = await FixtureModel.updateOne(filter, update, options)
+
+
+    if (result.nModified > 0) {
+      // Update successful, 'nModified' indicates the number of documents modified
+      console.log('Update successful');
+    } else {
+      // Update didn't make any changes, but the operation was successful
+      console.log('No changes made but update successful');
+    }
+
+
   } catch (error) {
+    console.log("we had an error saving this fixture")
     throw new Error('Error saving fixture:', error.message)
   }
 }
