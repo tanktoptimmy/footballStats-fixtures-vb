@@ -69,25 +69,13 @@ export default async function main(req, res) {
     return accumulator.concat(obj.response)
   }, [])
 
-  await dbConnect()
-  saveAllFixtures(mergedFixtures)
-    .then(() => {
-      res.status(200).json({ message: 'All saved nicely' })
-    })
-    .catch(error => {
-      console.error('Error saving fixtures:', error.message)
-      res.status(400).json({ message: "Houston, we've had a problem" })
-    })
-    .finally(() => {
-      mongoose.disconnect()
-      mongoose.connection.close()
-      console.info('mongoose connection closed')
-    })
+  const updateOperations = buildFixtures(mergedFixtures)
+  const { status, message } = await saveBatchedFixtures(updateOperations)
+  return res.status(status).json({ message })
 }
 
-// Function to save a fixture to the database
-const saveFixture = async fixture => {
-  try {
+const buildFixtures = fixtures =>
+  fixtures.map(fixture => {
     const newFixture = {
       _id: fixture.fixture.id,
       date: fixture.fixture.date,
@@ -99,26 +87,50 @@ const saveFixture = async fixture => {
       teams: {
         home: fixture.teams.home.name,
         away: fixture.teams.away.name
+      },
+      goals: {
+        home: fixture.goals.home,
+        away: fixture.goals.away
+      },
+      status: fixture.fixture.status.short
+    }
+    console.log(newFixture)
+    return {
+      updateOne: {
+        filter: { _id: fixture.fixture.id },
+        update: newFixture,
+        upsert: true
       }
     }
+  })
 
-    // console.log(newFixture)
-
-    const filter = { _id: fixture.fixture.id } // Assuming _id is present in the fixtureData
-    const update = { $set: newFixture }
-    const options = { upsert: true }
-    const result = await FixtureModel.updateOne(filter, update, options)
-
-    if (result.nModified > 0) {
+// Function to save a fixture to the database
+const saveBatchedFixtures = async fixtures => {
+  try {
+    await dbConnect()
+    const result = await FixtureModel.bulkWrite(fixtures)
+    mongoose.disconnect()
+    console.log("result", result)
+    console.log("modified", result.modifiedCount)
+    if (result.modifiedCount > 0) {
       // Update successful, 'nModified' indicates the number of documents modified
-      console.log('Update successful')
+      return {
+        message: `${result.modifiedCount} documents updated successfully`,
+        status: 200
+      }
     } else {
       // Update didn't make any changes, but the operation was successful
-      console.log('No changes made but update successful')
+      return {
+        message: 'No changes made but update successful',
+        status: 200
+      }
     }
   } catch (error) {
-    console.log('we had an error saving this fixture', error.message)
-    // throw new Error('Error saving fixture:', error.message)
+    mongoose.disconnect()
+    return {
+      message: `We had an error saving this fixture ${error.message}`,
+      status: 400
+    }
   }
 }
 

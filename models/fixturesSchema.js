@@ -16,7 +16,12 @@ const fixtureSchema = new mongoose.Schema({
   league: {
     name: String,
     id: Number
-  }
+  },
+  goals: {
+    home: String,
+    away: String
+  },
+  status: String
 })
 
 export const FixtureModel = mongoose.model('Fixture', fixtureSchema)
