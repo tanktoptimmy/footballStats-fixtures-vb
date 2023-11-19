@@ -4,6 +4,7 @@ const fixtureSchema = new mongoose.Schema({
   _id: Number,
   league: Number,
   date: Date,
+  referee: String,
   teams: {
     home: {
       name: String
@@ -17,9 +18,15 @@ const fixtureSchema = new mongoose.Schema({
     name: String,
     id: Number
   },
-  goals: {
-    home: String,
-    away: String
+  score: {
+    halftime: {
+      home: String,
+      away: String
+    },
+    fulltime: {
+      home: String,
+      away: String
+    }
   },
   status: String
 })

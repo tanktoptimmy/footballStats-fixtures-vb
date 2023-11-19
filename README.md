@@ -1,7 +1,6 @@
-###Matches View Builder###
+###Fixture View Builder###
 
-- Get todays fixture ids from mongodb fixtures collection
-- Get matches from rapidAPI and save back into the matches collection
+[domain]/api/fixtures/[competitionId1]/[competitionId2]/[...competition]
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 

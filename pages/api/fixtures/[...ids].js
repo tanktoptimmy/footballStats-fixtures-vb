@@ -80,6 +80,7 @@ const buildFixtures = fixtures =>
       _id: fixture.fixture.id,
       date: fixture.fixture.date,
       round: fixture.league.round,
+      referee: fixture.referee,
       league: {
         name: fixture.league.name,
         id: fixture.league.id
@@ -88,9 +89,15 @@ const buildFixtures = fixtures =>
         home: fixture.teams.home.name,
         away: fixture.teams.away.name
       },
-      goals: {
-        home: fixture.goals.home,
-        away: fixture.goals.away
+      score: {
+        "halftime": {
+          "home": fixture.score.halftime.home,
+          "away": fixture.score.halftime.away
+        },
+        "fulltime": {
+          "home": fixture.score.fulltime.home,
+          "away": fixture.score.fulltime.away
+        }
       },
       status: fixture.fixture.status.short
     }
