@@ -80,7 +80,7 @@ const buildFixtures = fixtures =>
       _id: fixture.fixture.id,
       date: fixture.fixture.date,
       round: fixture.league.round,
-      referee: fixture.referee,
+      referee: fixture.fixture.referee,
       league: {
         name: fixture.league.name,
         id: fixture.league.id
