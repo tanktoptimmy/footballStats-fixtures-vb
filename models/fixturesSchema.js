@@ -5,12 +5,15 @@ const fixtureSchema = new mongoose.Schema({
   league: Number,
   date: Date,
   referee: String,
+  season: Number,
   teams: {
     home: {
-      name: String
+      name: String,
+      id: Number
     },
     away: {
-      name: String
+      name: String,
+      id: Number
     }
   },
   round: String,
@@ -28,7 +31,9 @@ const fixtureSchema = new mongoose.Schema({
       away: String
     }
   },
-  status: String
+  status: String,
+  events: []
 })
 
-export const FixtureModel = mongoose.model('Fixture', fixtureSchema)
+export const FixtureModel =
+  mongoose.models.Fixture || mongoose.model('Fixture', fixtureSchema)

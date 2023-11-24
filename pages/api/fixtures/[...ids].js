@@ -81,27 +81,33 @@ const buildFixtures = fixtures =>
       date: fixture.fixture.date,
       round: fixture.league.round,
       referee: fixture.fixture.referee,
+      season: fixture.league.season,
       league: {
         name: fixture.league.name,
         id: fixture.league.id
       },
       teams: {
-        home: fixture.teams.home.name,
-        away: fixture.teams.away.name
+        home: {
+          name: fixture.teams.home.name,
+          id: fixture.teams.home.id
+        },
+        away: {
+          name: fixture.teams.away.name,
+          id: fixture.teams.away.id
+        }
       },
       score: {
-        "halftime": {
-          "home": fixture.score.halftime.home,
-          "away": fixture.score.halftime.away
+        halftime: {
+          home: fixture.score.halftime.home,
+          away: fixture.score.halftime.away
         },
-        "fulltime": {
-          "home": fixture.score.fulltime.home,
-          "away": fixture.score.fulltime.away
+        fulltime: {
+          home: fixture.score.fulltime.home,
+          away: fixture.score.fulltime.away
         }
       },
       status: fixture.fixture.status.short
     }
-    console.log(newFixture)
     return {
       updateOne: {
         filter: { _id: fixture.fixture.id },
@@ -117,12 +123,10 @@ const saveBatchedFixtures = async fixtures => {
     await dbConnect()
     const result = await FixtureModel.bulkWrite(fixtures)
     mongoose.disconnect()
-    console.log("result", result)
-    console.log("modified", result.modifiedCount)
-    if (result.modifiedCount > 0) {
+    if (result.modifiedCount > 0 || result.insertedCount > 0) {
       // Update successful, 'nModified' indicates the number of documents modified
       return {
-        message: `${result.modifiedCount} documents updated successfully`,
+        message: `${result.insertedCount} added and ${result.modifiedCount} documents updated successfully`,
         status: 200
       }
     } else {
