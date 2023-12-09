@@ -57,6 +57,21 @@ export default async function main(req, res) {
       // La Liga
       league: '140',
       season: '2023'
+    },
+    78:{
+      // Bundesliga
+      league: '78',
+      season: '2023'
+    },
+    135:{
+      // Serie A Italy
+      league: '135',
+      season: '2023'
+    },
+    61:{
+      // Ligue 1
+      league: '61',
+      season: '2023'
     }
   }
 

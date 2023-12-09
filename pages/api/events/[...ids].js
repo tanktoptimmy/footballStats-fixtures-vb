@@ -69,7 +69,7 @@ export default async function main(req, res) {
   const fixturesToUpdate = filterFixtures(fixtures).map(fixture => fixture._id);
   console.log(fixturesToUpdate)
 
-  const events = await getEvents(fixturesToUpdate.slice(0,10));
+  const events = await getEvents(fixturesToUpdate.slice(0,5));
 
   const curatedEvents = events.map(ev => {
     return {
