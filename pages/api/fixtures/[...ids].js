@@ -1,5 +1,7 @@
 import Axios from 'axios'
 import mongoose from 'mongoose'
+import { createLeagueIdString } from '@/helpers'
+import { leagues } from '@/contants/leagues'
 
 import dbConnect from '@/utils/dbConnect.js'
 import { FixtureModel } from '@/models/fixturesSchema.js'
@@ -42,38 +44,6 @@ const getFixtures = async leagues => {
 
 export default async function main(req, res) {
   const { ids } = req.query
-  const leagues = {
-    39: {
-      // Premier League
-      league: '39',
-      season: '2023'
-    },
-    40: {
-      // Championship
-      league: '40',
-      season: '2023'
-    },
-    140: {
-      // La Liga
-      league: '140',
-      season: '2023'
-    },
-    78:{
-      // Bundesliga
-      league: '78',
-      season: '2023'
-    },
-    135:{
-      // Serie A Italy
-      league: '135',
-      season: '2023'
-    },
-    61:{
-      // Ligue 1
-      league: '61',
-      season: '2023'
-    }
-  }
 
   const leaguesToGet = ids.map(id => leagues[id])
   // get all the fixtures
@@ -141,20 +111,20 @@ const saveBatchedFixtures = async fixtures => {
     if (result.modifiedCount > 0 || result.insertedCount > 0) {
       // Update successful, 'nModified' indicates the number of documents modified
       return {
-        message: `${result.insertedCount} added and ${result.modifiedCount} documents updated successfully`,
+        message: `${result.insertedCount} added and ${result.modifiedCount} documents updated successfully.  ${createLeagueIdString(leagues)}`,
         status: 200
       }
     } else {
       // Update didn't make any changes, but the operation was successful
       return {
-        message: 'No changes made but update successful',
+        message: `No changes made but update successful.  ${createLeagueIdString(leagues)}`,
         status: 200
       }
     }
   } catch (error) {
     mongoose.disconnect()
     return {
-      message: `We had an error saving this fixture ${error.message}`,
+      message: `We had an error saving this fixture ${error.message}.  ${createLeagueIdString(leagues)}`,
       status: 400
     }
   }
