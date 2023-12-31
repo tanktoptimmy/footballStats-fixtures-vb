@@ -32,7 +32,45 @@ const fixtureSchema = new mongoose.Schema({
     }
   },
   status: String,
-  events: []
+  events: [],
+  statistics: {
+    home: {
+      shotsOn: Number,
+      shotsOff: Number,
+      totalShots: Number,
+      blockedShots: Number,
+      shotsInside: Number,
+      // shotsOutside: Number,
+      // fouls: Number,
+      // corners: Number,
+      // offsides: Number,
+      // ballPossession: String,
+      // yellowCards: Number,
+      // redCards: Number,
+      // saves: Number,
+      // totalPasses: Number,
+      // passesAccurate: Number,
+      // passesPercentage: String
+    },
+    away: {
+      shotsOn: Number,
+      shotsOff: Number,
+      totalShots: Number,
+      blockedShots: Number,
+      shotsInside: Number,
+      shotsOutside: Number,
+      fouls: Number,
+      corners: Number,
+      offsides: Number,
+      ballPossession: String,
+      yellowCards: Number,
+      redCards: Number,
+      saves: Number,
+      totalPasses: Number,
+      passesAccurate: Number,
+      passesPercentage: String
+    }
+  }
 })
 
 export const FixtureModel =
