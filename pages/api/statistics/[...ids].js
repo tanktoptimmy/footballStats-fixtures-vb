@@ -61,7 +61,7 @@ const getFixtures = async ids => {
 const filterFixtures = fixtures => fixtures.filter(fixture => {
   const now = new Date();
   const dateToCompare = startOfMinute(fixture.date);
-  return isBefore(dateToCompare, now) && fixture.statistics.home.shotsOn === undefined;
+  return isBefore(dateToCompare, now) && (fixture.statistics?.home?.corners === undefined || fixture.statistics?.away?.corners === undefined);
 });
 
 export default async function main(req, res) {
@@ -69,10 +69,10 @@ export default async function main(req, res) {
   await dbConnect()
   const fixtures = await getFixtures(ids)
   const fixturesToUpdate = filterFixtures(fixtures).map(fixture => fixture._id);
-  console.log("fixturesToUpdate", fixturesToUpdate)
+  console.log(fixturesToUpdate.length)
   const slicedFixturesToUpdate = fixturesToUpdate.slice(0,5);
+  console.log(slicedFixturesToUpdate)
   const events = await getEvents(slicedFixturesToUpdate);
-  console.log("slicedFixturesToUpdate", slicedFixturesToUpdate)
   const curatedEvents = events.map(ev => {
     const { teams } = fixtures.find(obj => obj._id.toString() === ev.parameters.fixture.toString());
     return {
@@ -80,6 +80,7 @@ export default async function main(req, res) {
       statistics: createStatistics(ev.response, teams)
     }
   })
+
   const updateOperations = buildFixtures(curatedEvents)
   const { status, message } = await saveBatchedFixtures(updateOperations)
   return res.status(status).json({ message })
@@ -126,9 +127,9 @@ const buildFixtures = fixtures =>
     const newFixture = {
       statistics: fixture.statistics
     }
-    return {
+    return  {
       updateOne: {
-        filter: { _id: fixture.id },
+        filter: { _id: parseInt(fixture.id, 10) },
         update: newFixture,
         upsert: true
       }
