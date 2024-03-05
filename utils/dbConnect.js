@@ -8,6 +8,7 @@ async function dbConnect() {
     console.log('Connected to MongoDB')
     console.log(`39: Premier League
     40: Championship
+    41: League One
     140: La Liga
     78: Bundesliga
     135: Serie A Italy

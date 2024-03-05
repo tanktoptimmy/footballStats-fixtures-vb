@@ -9,6 +9,16 @@ export const leagues = {
     league: '40',
     season: '2023'
   },
+  41: {
+    // League One
+    league: '41',
+    season: '2023'
+  },
+  42: {
+    // League Two
+    league: '42',
+    season: '2023'
+  },
   140: {
     // La Liga
     league: '140',

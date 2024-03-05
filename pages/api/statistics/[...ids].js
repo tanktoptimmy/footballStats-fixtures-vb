@@ -8,6 +8,7 @@ import dbConnect from '@/utils/dbConnect.js'
 import { FixtureModel } from '@/models/fixturesSchema.js'
 
 const makeRequest = async id => {
+  console.log(`getting ${id}`)
   const options = {
     method: 'GET',
     url: 'https://api-football-v1.p.rapidapi.com/v3/fixtures/statistics',
@@ -27,6 +28,8 @@ const makeRequest = async id => {
 
 
 const getEvents = async fixtureIds => {
+
+  console.log("get events called")
   // Array to store all the promises for fetching data
   const fetchPromises = []
 
@@ -66,6 +69,7 @@ const filterFixtures = fixtures => fixtures.filter(fixture => {
 
 export default async function main(req, res) {
   const { ids } = req.query
+  console.log("connecting to db")
   await dbConnect()
   const fixtures = await getFixtures(ids)
   const fixturesToUpdate = filterFixtures(fixtures).map(fixture => fixture._id);
@@ -108,16 +112,25 @@ const createTeamStats = (stats) => {
 }
 const getStat = (arr, name) => arr.find(stat => stat.type === name)
 const createStatistics = (events, teams) => {
-  if (events[0].team.id === teams.home.id && events[1].team.id === teams.away.id) {
+  if (events[0]?.team?.id === teams.home.id && events[1]?.team?.id === teams.away.id) {
     return {
       home: createTeamStats(events[0].statistics),
       away: createTeamStats(events[1].statistics)
     }
   }
-  if (events[1].team.id === teams.home.id && events[0].team.id === teams.away.id) {
+  if (events[1]?.team?.id === teams.home.id && events[0]?.team?.id === teams.away.id) {
     return {
       home: createTeamStats(events[1].statistics),
       away: createTeamStats(events[0].statistics)
+    }
+  }
+
+  return {
+    home: {
+      
+    },
+    away: {
+      
     }
   }
 }
@@ -140,8 +153,9 @@ const buildFixtures = fixtures =>
 const saveBatchedFixtures = async fixtures => {
   try {
     await dbConnect()
+    console.log(`bulk writing ${fixtures.length} fixtures`)
     const result = await FixtureModel.bulkWrite(fixtures)
-    mongoose.disconnect()
+    
     if (result.modifiedCount > 0 || result.insertedCount > 0) {
       // Update successful, 'nModified' indicates the number of documents modified
       return {
@@ -156,11 +170,13 @@ const saveBatchedFixtures = async fixtures => {
       }
     }
   } catch (error) {
-    mongoose.disconnect()
+    
     return {
       message: `We had an error saving this fixture ${error.message} ${createLeagueIdString(leagues)}`,
       status: 400
     }
+  } finally {
+    mongoose.disconnect()
   }
 }
 
