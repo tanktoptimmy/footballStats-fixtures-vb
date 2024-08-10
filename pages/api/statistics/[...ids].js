@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 import { startOfMinute, isBefore } from 'date-fns'
-import Axios from 'axios';
-import { leagues } from '@/contants/leagues';
+import Axios from 'axios'
+import { leagues } from '@/contants/leagues'
 import { createLeagueIdString } from '@/helpers'
 
 import dbConnect from '@/utils/dbConnect.js'
@@ -12,7 +12,7 @@ const makeRequest = async id => {
   const options = {
     method: 'GET',
     url: 'https://api-football-v1.p.rapidapi.com/v3/fixtures/statistics',
-    params: {fixture: id},
+    params: { fixture: id },
     headers: {
       'X-RapidAPI-Key': process.env.RAPIDAPIKEY,
       'X-RapidAPI-Host': process.env.RAPIDAPIHOST
@@ -26,10 +26,8 @@ const makeRequest = async id => {
   }
 }
 
-
 const getEvents = async fixtureIds => {
-
-  console.log("get events called")
+  console.log('get events called')
   // Array to store all the promises for fetching data
   const fetchPromises = []
 
@@ -61,64 +59,121 @@ const getFixtures = async ids => {
   }
 }
 
-const filterFixtures = fixtures => fixtures.filter(fixture => {
-  const now = new Date();
-  const dateToCompare = startOfMinute(fixture.date);
-  return isBefore(dateToCompare, now) && (fixture.statistics?.home?.corners === undefined || fixture.statistics?.away?.corners === undefined);
-});
+const filterFixtures = fixtures =>
+  fixtures.filter(fixture => {
+    const now = new Date()
+    const dateToCompare = startOfMinute(fixture.date)
+    return (
+      isBefore(dateToCompare, now) &&
+      (fixture.statistics?.home?.corners === undefined ||
+        fixture.statistics?.away?.corners === undefined)
+    )
+  })
 
 export default async function main(req, res) {
   const { ids } = req.query
-  console.log("connecting to db")
+  console.log('connecting to db')
   await dbConnect()
   const fixtures = await getFixtures(ids)
-  const fixturesToUpdate = filterFixtures(fixtures).map(fixture => fixture._id);
+  const fixturesToUpdate = filterFixtures(fixtures).map(fixture => fixture._id)
   console.log(fixturesToUpdate.length)
-  const slicedFixturesToUpdate = fixturesToUpdate.slice(0,5);
+  const slicedFixturesToUpdate = fixturesToUpdate.slice(0, 5)
   console.log(slicedFixturesToUpdate)
-  const events = await getEvents(slicedFixturesToUpdate);
+  const events = await getEvents(slicedFixturesToUpdate)
   const curatedEvents = events.map(ev => {
-    const { teams } = fixtures.find(obj => obj._id.toString() === ev.parameters.fixture.toString());
+    const { teams } = fixtures.find(
+      obj => obj._id.toString() === ev.parameters.fixture.toString()
+    )
     return {
       id: ev.parameters.fixture,
       statistics: createStatistics(ev.response, teams)
     }
   })
 
+  // const curatedEvents = [{
+  //   id:1052668,
+  //   statistics: {
+  //   home: {
+  //     shotsOn:  7,
+  //     shotsOff: 7,
+  //     totalShots: 14,
+  //     blockedShots: 0,
+  //     shotsInside: 0,
+  //     shotsOutside: 0,
+  //     fouls: 12,
+  //     corners: 2,
+  //     offsides: 4,
+  //     ballPossession: "55%",
+  //     yellowCards: 1,
+  //     redCards: 0,
+  //     saves: 0,
+  //     totalPasses: 587,
+  //     passesAccurate: 87,
+  //     passesPercentage: 0,
+  //   },
+  //   away: {
+  //     shotsOn:  3,
+  //     shotsOff: 8,
+  //     totalShots: 11,
+  //     blockedShots: 0,
+  //     shotsInside: 0,
+  //     shotsOutside: 0,
+  //     fouls: 8,
+  //     corners: 3,
+  //     offsides: 2,
+  //     ballPossession: "45%",
+  //     yellowCards: 1,
+  //     redCards: 0,
+  //     saves: 0,
+  //     totalPasses: 481,
+  //     passesAccurate: 82,
+  //     passesPercentage: 0,
+  //   }
+  // }
+  // }]
+
+  // console.log(curatedEvents)
   const updateOperations = buildFixtures(curatedEvents)
+
   const { status, message } = await saveBatchedFixtures(updateOperations)
   return res.status(status).json({ message })
 }
 
-const createTeamStats = (stats) => {
+const createTeamStats = stats => {
   return {
-    shotsOn: getStat(stats,"Shots on Goal").value || 0,
-    shotsOff: getStat(stats,"Shots off Goal").value || 0,
-    totalShots: getStat(stats,"Total Shots").value || 0,
-    blockedShots: getStat(stats,"Blocked Shots").value || 0,
-    shotsInside: getStat(stats,"Shots insidebox").value || 0,
-    shotsOutside: getStat(stats,"Shots outsidebox").value || 0,
-    fouls: getStat(stats,"Fouls").value || 0,
-    corners: getStat(stats,"Corner Kicks").value || 0,
-    offsides: getStat(stats,"Offsides").value || 0,
-    ballPossession: getStat(stats,"Ball Possession").value || "unknown",
-    yellowCards: getStat(stats,"Yellow Cards").value || 0,
-    redCards: getStat(stats,"Red Cards").value || 0,
-    saves: getStat(stats,"Goalkeeper Saves").value || 0,
-    totalPasses: getStat(stats,"Total passes").value || 0,
-    passesAccurate: getStat(stats,"Passes accurate").value || 0,
-    passesPercentage: getStat(stats,"Passes %").value || "unknown"
+    shotsOn: getStat(stats, 'Shots on Goal').value || 0,
+    shotsOff: getStat(stats, 'Shots off Goal').value || 0,
+    totalShots: getStat(stats, 'Total Shots').value || 0,
+    blockedShots: getStat(stats, 'Blocked Shots').value || 0,
+    shotsInside: getStat(stats, 'Shots insidebox').value || 0,
+    shotsOutside: getStat(stats, 'Shots outsidebox').value || 0,
+    fouls: getStat(stats, 'Fouls').value || 0,
+    corners: getStat(stats, 'Corner Kicks').value || 0,
+    offsides: getStat(stats, 'Offsides').value || 0,
+    ballPossession: getStat(stats, 'Ball Possession').value || 'unknown',
+    yellowCards: getStat(stats, 'Yellow Cards').value || 0,
+    redCards: getStat(stats, 'Red Cards').value || 0,
+    saves: getStat(stats, 'Goalkeeper Saves').value || 0,
+    totalPasses: getStat(stats, 'Total passes').value || 0,
+    passesAccurate: getStat(stats, 'Passes accurate').value || 0,
+    passesPercentage: getStat(stats, 'Passes %').value || 'unknown'
   }
 }
 const getStat = (arr, name) => arr.find(stat => stat.type === name)
 const createStatistics = (events, teams) => {
-  if (events[0]?.team?.id === teams.home.id && events[1]?.team?.id === teams.away.id) {
+  if (
+    events[0]?.team?.id === teams.home.id &&
+    events[1]?.team?.id === teams.away.id
+  ) {
     return {
       home: createTeamStats(events[0].statistics),
       away: createTeamStats(events[1].statistics)
     }
   }
-  if (events[1]?.team?.id === teams.home.id && events[0]?.team?.id === teams.away.id) {
+  if (
+    events[1]?.team?.id === teams.home.id &&
+    events[0]?.team?.id === teams.away.id
+  ) {
     return {
       home: createTeamStats(events[1].statistics),
       away: createTeamStats(events[0].statistics)
@@ -126,12 +181,8 @@ const createStatistics = (events, teams) => {
   }
 
   return {
-    home: {
-      
-    },
-    away: {
-      
-    }
+    home: {},
+    away: {}
   }
 }
 
@@ -140,7 +191,7 @@ const buildFixtures = fixtures =>
     const newFixture = {
       statistics: fixture.statistics
     }
-    return  {
+    return {
       updateOne: {
         filter: { _id: parseInt(fixture.id, 10) },
         update: newFixture,
@@ -155,24 +206,29 @@ const saveBatchedFixtures = async fixtures => {
     await dbConnect()
     console.log(`bulk writing ${fixtures.length} fixtures`)
     const result = await FixtureModel.bulkWrite(fixtures)
-    
+
     if (result.modifiedCount > 0 || result.insertedCount > 0) {
       // Update successful, 'nModified' indicates the number of documents modified
       return {
-        message: `${result.insertedCount} added and ${result.modifiedCount} documents updated successfully  ${createLeagueIdString(leagues)}`,
+        message: `${result.insertedCount} added and ${
+          result.modifiedCount
+        } documents updated successfully  ${createLeagueIdString(leagues)}`,
         status: 200
       }
     } else {
       // Update didn't make any changes, but the operation was successful
       return {
-        message: `No changes made but update successful ${createLeagueIdString(leagues)}`,
+        message: `No changes made but update successful ${createLeagueIdString(
+          leagues
+        )}`,
         status: 200
       }
     }
   } catch (error) {
-    
     return {
-      message: `We had an error saving this fixture ${error.message} ${createLeagueIdString(leagues)}`,
+      message: `We had an error saving this fixture ${
+        error.message
+      } ${createLeagueIdString(leagues)}`,
       status: 400
     }
   } finally {

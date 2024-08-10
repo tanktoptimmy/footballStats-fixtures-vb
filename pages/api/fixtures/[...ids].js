@@ -7,6 +7,7 @@ import dbConnect from '@/utils/dbConnect.js'
 import { FixtureModel } from '@/models/fixturesSchema.js'
 
 const makeRequest = async league => {
+  console.log('k:', league)
   const options = {
     method: 'GET',
     url: 'https://api-football-v1.p.rapidapi.com/v3/fixtures',
@@ -18,6 +19,8 @@ const makeRequest = async league => {
   }
   try {
     const response = await Axios(options)
+
+    console.log(response.data.response[08])
     return response.data // Assuming the response contains the data you need
   } catch (error) {
     throw new Error(`Error fetching data for league ${league.league}:`, error)
@@ -111,20 +114,26 @@ const saveBatchedFixtures = async fixtures => {
     if (result.modifiedCount > 0 || result.insertedCount > 0) {
       // Update successful, 'nModified' indicates the number of documents modified
       return {
-        message: `${result.insertedCount} added and ${result.modifiedCount} documents updated successfully.  ${createLeagueIdString(leagues)}`,
+        message: `${result.insertedCount} added and ${
+          result.modifiedCount
+        } documents updated successfully.  ${createLeagueIdString(leagues)}`,
         status: 200
       }
     } else {
       // Update didn't make any changes, but the operation was successful
       return {
-        message: `No changes made but update successful.  ${createLeagueIdString(leagues)}`,
+        message: `No changes made but update successful.  ${createLeagueIdString(
+          leagues
+        )}`,
         status: 200
       }
     }
   } catch (error) {
     mongoose.disconnect()
     return {
-      message: `We had an error saving this fixture ${error.message}.  ${createLeagueIdString(leagues)}`,
+      message: `We had an error saving this fixture ${
+        error.message
+      }.  ${createLeagueIdString(leagues)}`,
       status: 400
     }
   }

@@ -9,6 +9,7 @@ async function dbConnect() {
     console.log(`39: Premier League
     40: Championship
     41: League One
+    42: League Two
     140: La Liga
     78: Bundesliga
     135: Serie A Italy

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 import { startOfMinute, isBefore } from 'date-fns'
-import Axios from 'axios';
-import { leagues } from '@/contants/leagues';
+import Axios from 'axios'
+import { leagues } from '@/contants/leagues'
 import { createLeagueIdString } from '@/helpers'
 
 import dbConnect from '@/utils/dbConnect.js'
@@ -11,7 +11,7 @@ const makeRequest = async id => {
   const options = {
     method: 'GET',
     url: 'https://api-football-v1.p.rapidapi.com/v3/fixtures/events',
-    params: {fixture: id},
+    params: { fixture: id },
     headers: {
       'X-RapidAPI-Key': process.env.RAPIDAPIKEY,
       'X-RapidAPI-Host': process.env.RAPIDAPIHOST
@@ -24,7 +24,6 @@ const makeRequest = async id => {
     throw new Error(`Error fetching data for fixture ${id}:`, error)
   }
 }
-
 
 const getEvents = async fixtureIds => {
   // Array to store all the promises for fetching data
@@ -58,20 +57,21 @@ const getFixtures = async ids => {
   }
 }
 
-const filterFixtures = fixtures => fixtures.filter(fixture => {
-  const now = new Date();
-  const dateToCompare = startOfMinute(fixture.date);
-  return isBefore(dateToCompare, now) && fixture.events.length === 0
-});
+const filterFixtures = fixtures =>
+  fixtures.filter(fixture => {
+    const now = new Date()
+    const dateToCompare = startOfMinute(fixture.date)
+    return isBefore(dateToCompare, now) && fixture.events.length === 0
+  })
 
 export default async function main(req, res) {
   const { ids } = req.query
   await dbConnect()
   const fixtures = await getFixtures(ids)
-  const fixturesToUpdate = filterFixtures(fixtures).map(fixture => fixture._id);
+  const fixturesToUpdate = filterFixtures(fixtures).map(fixture => fixture._id)
   console.log(fixturesToUpdate)
 
-  const events = await getEvents(fixturesToUpdate.slice(0,5));
+  const events = await getEvents(fixturesToUpdate.slice(0, 5))
 
   const curatedEvents = events.map(ev => {
     return {
@@ -84,30 +84,30 @@ export default async function main(req, res) {
   return res.status(status).json({ message })
 }
 
-const createEvents = (events) => {
-  const filtered = events.filter(ev => ["Card", "Goal"].includes(ev.type));
-  let cardCounts = {};
-  let modifiedCards = [];
+const createEvents = events => {
+  const filtered = events.filter(ev => ['Card', 'Goal'].includes(ev.type))
+  let cardCounts = {}
+  let modifiedCards = []
 
   filtered.forEach((card, _) => {
     if (card.detail === 'Yellow Card') {
-      const playerId = card.player.id;
-      cardCounts[playerId] = (cardCounts[playerId] || 0) + 1;
+      const playerId = card.player.id
+      cardCounts[playerId] = (cardCounts[playerId] || 0) + 1
 
       if (cardCounts[playerId] == 2) {
-        card.detail = 'Yellow/Red Card';
-        card.comments = 'Two Yellow Cards';
-        return modifiedCards.push(card);
+        card.detail = 'Yellow/Red Card'
+        card.comments = 'Two Yellow Cards'
+        return modifiedCards.push(card)
       }
     } else if (card.detail === 'Red Card') {
-      const playerId = card.player.id;
+      const playerId = card.player.id
       if (cardCounts[playerId] && cardCounts[playerId] < 2) {
-        return modifiedCards.push(card);
+        return modifiedCards.push(card)
       }
-      return;
+      return
     }
-    return modifiedCards.push(card);
-  });
+    return modifiedCards.push(card)
+  })
   return modifiedCards
 }
 
@@ -134,20 +134,26 @@ const saveBatchedFixtures = async fixtures => {
     if (result.modifiedCount > 0 || result.insertedCount > 0) {
       // Update successful, 'nModified' indicates the number of documents modified
       return {
-        message: `${result.insertedCount} added and ${result.modifiedCount} documents updated successfully  ${createLeagueIdString(leagues)}`,
+        message: `${result.insertedCount} added and ${
+          result.modifiedCount
+        } documents updated successfully  ${createLeagueIdString(leagues)}`,
         status: 200
       }
     } else {
       // Update didn't make any changes, but the operation was successful
       return {
-        message: `No changes made but update successful ${createLeagueIdString(leagues)}`,
+        message: `No changes made but update successful ${createLeagueIdString(
+          leagues
+        )}`,
         status: 200
       }
     }
   } catch (error) {
     mongoose.disconnect()
     return {
-      message: `We had an error saving this fixture ${error.message} ${createLeagueIdString(leagues)}`,
+      message: `We had an error saving this fixture ${
+        error.message
+      } ${createLeagueIdString(leagues)}`,
       status: 400
     }
   }
