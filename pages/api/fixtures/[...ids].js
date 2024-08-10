@@ -20,7 +20,7 @@ const makeRequest = async league => {
   try {
     const response = await Axios(options)
 
-    console.log(response.data.response[08])
+    console.log(response.data.response[0])
     return response.data // Assuming the response contains the data you need
   } catch (error) {
     throw new Error(`Error fetching data for league ${league.league}:`, error)
