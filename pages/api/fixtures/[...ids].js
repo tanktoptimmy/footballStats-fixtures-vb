@@ -107,6 +107,7 @@ const buildFixtures = fixtures =>
 
 // Function to save a fixture to the database
 const saveBatchedFixtures = async fixtures => {
+  const urls = createLeagueIdString(leagues);
   try {
     await dbConnect()
     const result = await FixtureModel.bulkWrite(fixtures)
@@ -116,15 +117,13 @@ const saveBatchedFixtures = async fixtures => {
       return {
         message: `${result.insertedCount} added and ${
           result.modifiedCount
-        } documents updated successfully.  ${createLeagueIdString(leagues)}`,
+        } documents updated successfully. ${urls.join('.                                                  ')}`,
         status: 200
       }
     } else {
       // Update didn't make any changes, but the operation was successful
       return {
-        message: `No changes made but update successful.  ${createLeagueIdString(
-          leagues
-        )}`,
+        message: `No changes made but update successful. ${urls.join('.                                                  ')}`,
         status: 200
       }
     }
@@ -133,7 +132,7 @@ const saveBatchedFixtures = async fixtures => {
     return {
       message: `We had an error saving this fixture ${
         error.message
-      }.  ${createLeagueIdString(leagues)}`,
+      }. ${urls.join('.                                                  ')}`,
       status: 400
     }
   }

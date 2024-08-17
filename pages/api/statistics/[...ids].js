@@ -8,7 +8,6 @@ import dbConnect from '@/utils/dbConnect.js'
 import { FixtureModel } from '@/models/fixturesSchema.js'
 
 const makeRequest = async id => {
-  console.log(`getting ${id}`)
   const options = {
     method: 'GET',
     url: 'https://api-football-v1.p.rapidapi.com/v3/fixtures/statistics',
@@ -203,6 +202,7 @@ const buildFixtures = fixtures =>
 // Function to save a fixture to the database
 const saveBatchedFixtures = async fixtures => {
   try {
+    const urls = createLeagueIdString(leagues);
     await dbConnect()
     console.log(`bulk writing ${fixtures.length} fixtures`)
     const result = await FixtureModel.bulkWrite(fixtures)
@@ -212,15 +212,13 @@ const saveBatchedFixtures = async fixtures => {
       return {
         message: `${result.insertedCount} added and ${
           result.modifiedCount
-        } documents updated successfully  ${createLeagueIdString(leagues)}`,
+        } documents updated successfully: ${urls.join('.                                                  ')}`,
         status: 200
       }
     } else {
       // Update didn't make any changes, but the operation was successful
       return {
-        message: `No changes made but update successful ${createLeagueIdString(
-          leagues
-        )}`,
+        message: `No changes made but update successful: ${urls.join('.                                                  ')}`,
         status: 200
       }
     }
@@ -228,7 +226,7 @@ const saveBatchedFixtures = async fixtures => {
     return {
       message: `We had an error saving this fixture ${
         error.message
-      } ${createLeagueIdString(leagues)}`,
+      } ${urls.join('.                                                  ')}`,
       status: 400
     }
   } finally {
